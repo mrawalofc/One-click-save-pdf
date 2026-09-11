@@ -1,16 +1,14 @@
-const filesEl=document.getElementById("files"),pages=document.getElementById("pages"),layoutEl=document.getElementById("layout"),orientationEl=document.getElementById("orientation"),gapEl=document.getElementById("gap"),gapValue=document.getElementById("gapValue"),hint=document.getElementById("hint");
-let photos=[];
-filesEl.addEventListener("change",e=>{[...e.target.files].forEach(file=>{if(file.type.startsWith("image/")){const r=new FileReader();r.onload=()=>{photos.push({src:r.result,name:file.name});render()};r.readAsDataURL(file)}});e.target.value=""});
-layoutEl.onchange=render; orientationEl.onchange=render; gapEl.oninput=()=>{gapValue.textContent=gapEl.value+" mm";render()}; document.getElementById("clear").onclick=()=>{photos=[];render()};
-function render(){pages.innerHTML="";hint.style.display=photos.length?"none":"block"; if(!photos.length)return;
-const per=+layoutEl.value; const ori=orientationEl.value; const gap=+gapEl.value;
-for(let p=0;p<photos.length;p+=per){const page=document.createElement("div");page.className="a4-page "+ori;page.style.gridTemplateColumns=`repeat(${Math.min(per,photos.length-p)},1fr)`;page.style.gap=gap+"mm";page.style.padding=gap+"mm";
-for(let i=p;i<Math.min(p+per,photos.length);i++){const item=photos[i],cell=document.createElement("div");cell.className="photo";cell.draggable=true;cell.dataset.i=i;
-cell.innerHTML=`<span class="num">${i+1}</span><button title="Remove">×</button><img src="${item.src}" alt="">`;
-cell.querySelector("button").onclick=()=>{photos.splice(i,1);render()}; cell.ondragstart=e=>e.dataTransfer.setData("text/plain",i);cell.ondragover=e=>{e.preventDefault();cell.classList.add("drop-active")};cell.ondragleave=()=>cell.classList.remove("drop-active");cell.ondrop=e=>{e.preventDefault();cell.classList.remove("drop-active");const from=+e.dataTransfer.getData("text/plain"),to=+cell.dataset.i;if(from!==to){const x=photos.splice(from,1)[0];photos.splice(to,0,x);render()}};page.appendChild(cell)}pages.appendChild(page)}
-}
-document.getElementById("savePdf").onclick=async()=>{if(!photos.length){alert("Please add at least one photo.");return}
-const {jsPDF}=window.jspdf;const ori=orientationEl.value;const pdf=new jsPDF({orientation:ori,unit:"mm",format:"a4",compress:true});const per=+layoutEl.value,gap=+gapEl.value;const pw=210,ph=297;const W=ori==="portrait"?pw:ph,H=ori==="portrait"?ph:pw;
-for(let p=0;p<photos.length;p+=per){if(p)pdf.addPage("a4",ori);const count=Math.min(per,photos.length-p),w=(W-2*gap-(count-1)*gap)/count,h=H-2*gap;
-for(let j=0;j<count;j++){const item=photos[p+j];pdf.addImage(item.src,"JPEG",gap+j*(w+gap),gap,w,h,undefined,"FAST")}}
-pdf.save("A4-photo-album.pdf")}; render();
+const $=id=>document.getElementById(id);let P=[],sel=-1,drag=null;
+function size(){return $('ori').value==='portrait'?{w:210,h:297}:{w:297,h:210}}
+function fname(){let a=($('doc').value||'A4-Photo-Studio').trim().replace(/[^\w-]+/g,'-'),b=($('nick').value||'Photos').trim().replace(/[^\w-]+/g,'-'),t=$('time').checked?'_'+new Date().toISOString().slice(0,16).replace('T','_').replace(':',''):'';return a+'_'+b+t+'.pdf'}
+function preview(){$('preview').textContent=fname()} $('nick').oninput=$('doc').oninput=$('time').onchange=preview;
+$('files').onchange=e=>[...e.target.files].forEach(f=>{let r=new FileReader();r.onload=()=>{let i=P.length;P.push({src:r.result,x:10+(i%2)*100,y:10+Math.floor(i/2)*80,w:90,h:70});sel=i;render()};r.readAsDataURL(f)});
+$('ori').onchange=render;$('clear').onclick=()=>{P=[];sel=-1;render()};$('auto').onclick=()=>{let s=size(),n=P.length,cols=n<3?n:2,g=5,w=(s.w-(cols+1)*g)/cols,h=65;P.forEach((p,i)=>{p.x=g+(i%cols)*(w+g);p.y=g+Math.floor(i/cols)*(h+g);p.w=w;p.h=h});render()};
+function render(){$('page').className='a4 '+$('ori').value;$('page').innerHTML='';$('hint').style.display=P.length?'none':'block';P.forEach((p,i)=>{let e=document.createElement('div');e.className='item '+(i===sel?'sel':'');e.style.cssText=`left:${p.x}mm;top:${p.y}mm;width:${p.w}mm;height:${p.h}mm`;e.innerHTML=`<span class=tag>${i+1}</span><img src="${p.src}"><span class=handle></span>`;e.onpointerdown=x=>start(x,i,false);e.querySelector('.handle').onpointerdown=x=>{x.stopPropagation();start(x,i,true)};$('page').appendChild(e)});$('none').hidden=sel>=0;$('ctrl').hidden=sel<0;if(sel>=0){['x','y','w','h'].forEach(k=>$(k).value=Math.round(P[sel][k]*10)/10)}}
+function start(e,i,r){sel=i;drag={i,r,sx:e.clientX,sy:e.clientY,p:{...P[i]}};render()}
+document.onpointermove=e=>{if(!drag)return;let p=P[drag.i],s=size(),dx=(e.clientX-drag.sx)/3.7795,dy=(e.clientY-drag.sy)/3.7795;if(drag.r){p.w=Math.max(10,drag.p.w+dx);p.h=Math.max(10,drag.p.h+dy)}else{p.x=Math.max(0,Math.min(s.w-p.w,drag.p.x+dx));p.y=Math.max(0,Math.min(s.h-p.h,drag.p.y+dy))}render()};document.onpointerup=()=>drag=null;
+['x','y','w','h'].forEach(k=>$(k).oninput=()=>{if(sel>=0){P[sel][k]=+$(k).value;render()}});$('remove').onclick=()=>{if(sel>=0){P.splice(sel,1);sel=-1;render()}};
+$('crop').onclick=()=>{if(sel>=0){$('modal').hidden=false;draw()}};$('close').onclick=()=>$('modal').hidden=true;$('apply').onclick=()=>$('modal').hidden=true;$('zoom').oninput=draw;
+function draw(){let c=$('canvas'),q=c.getContext('2d'),im=new Image();im.onload=()=>{q.clearRect(0,0,c.width,c.height);let z=+$('zoom').value,s=Math.max(c.width/im.width,c.height/im.height)*z,w=im.width*s,h=im.height*s;q.drawImage(im,(c.width-w)/2,(c.height-h)/2,w,h)};im.src=P[sel].src}
+$('ai').onclick=()=>alert('AI-ready extension points: Auto Crop, ID Photo detection, background removal, enhancement and smart layout can be connected to an AI API.');
+$('save').onclick=()=>{if(!P.length)return alert('Add pictures first.');let {jsPDF}=window.jspdf,s=size(),pdf=new jsPDF({orientation:$('ori').value,unit:'mm',format:'a4',compress:true});P.forEach(p=>pdf.addImage(p.src,'JPEG',p.x,p.y,p.w,p.h,undefined,'FAST'));pdf.save(fname())};preview();render();
