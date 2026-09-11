@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A4 Side-by-Side Photo PDF</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div>
+    <h1>📄 A4 Photo PDF</h1>
+    <p>Upload photos → arrange side by side → save as PDF</p>
+  </div>
+  <button id="savePdf" class="primary">⬇ Save PDF</button>
+</header>
+
+<main>
+  <section class="toolbar">
+    <label class="upload">
+      📷 Add Photos
+      <input id="files" type="file" accept="image/*" multiple>
+    </label>
+    <label>Layout
+      <select id="layout">
+        <option value="2">2 photos side by side</option>
+        <option value="3">3 photos side by side</option>
+        <option value="1">1 photo full width</option>
+      </select>
+    </label>
+    <label>Page
+      <select id="orientation">
+        <option value="portrait">A4 Portrait</option>
+        <option value="landscape">A4 Landscape</option>
+      </select>
+    </label>
+    <label>Gap
+      <input id="gap" type="range" min="0" max="30" value="8">
+      <span id="gapValue">8 mm</span>
+    </label>
+    <button id="clear" class="danger">Clear All</button>
+  </section>
+
+  <section class="workspace">
+    <div class="hint" id="hint">Add photos to start. You can drag photos to reorder them.</div>
+    <div id="pages"></div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
