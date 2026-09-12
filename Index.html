@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A4 Photo Studio Pro — One Picture Per Page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05070f;
+  --panel:rgba(15,20,36,.62);
+  --panel-solid:#0f1424;
+  --border:rgba(148,163,255,.14);
+  --border-strong:rgba(148,163,255,.28);
+  --text:#e8ecff;
+  --muted:#8b94b8;
+  --accent:#7c6cff;
+  --accent-2:#22d3ee;
+  --danger:#ff5c7a;
+  --radius:14px;
+  --font-body:'Inter',system-ui,-apple-system,sans-serif;
+  --font-display:'Space Grotesk','Inter',system-ui,sans-serif;
+}
+
+*{box-sizing:border-box}
+html{scrollbar-color:rgba(255,255,255,.15) transparent}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 var(--font-body);min-height:100vh}
+::selection{background:rgba(124,108,255,.45);color:#fff}
+svg{width:16px;height:16px;flex:0 0 auto}
+button,input,select{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:99px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.22);background-clip:content-box}
+
+/* ---------- animated background ---------- */
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;background:radial-gradient(120% 120% at 70% 0%,#0b1024 0%,#05070f 55%)}
+.blob{position:absolute;border-radius:50%;filter:blur(110px);opacity:.5;will-change:transform}
+.b1{width:56vmax;height:56vmax;left:-18vmax;top:-22vmax;background:radial-gradient(circle at 35% 35%,#6d5cff,transparent 65%);animation:drift1 26s ease-in-out infinite alternate}
+.b2{width:44vmax;height:44vmax;right:-14vmax;top:8vmax;background:radial-gradient(circle at 60% 40%,#0891b2,transparent 65%);opacity:.42;animation:drift2 32s ease-in-out infinite alternate}
+.b3{width:40vmax;height:40vmax;left:22vw;bottom:-24vmax;background:radial-gradient(circle at 50% 50%,#a855f7,transparent 65%);opacity:.32;animation:drift3 38s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(9vmax,7vmax) scale(1.15)}}
+@keyframes drift2{to{transform:translate(-8vmax,10vmax) scale(.9) rotate(20deg)}}
+@keyframes drift3{to{transform:translate(6vmax,-9vmax) scale(1.2)}}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:46px 46px;mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 30%,transparent 78%);-webkit-mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 30%,transparent 78%)}
+.bg-noise{position:absolute;inset:0;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E")}
+
+.app{max-width:1460px;margin:0 auto;padding:0 20px 30px}
+
+/* ---------- header ---------- */
+.topbar{position:sticky;top:0;z-index:40;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 4px;margin:0 -4px;background:rgba(5,7,15,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:13px}
+.logo{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;color:#fff;background:linear-gradient(135deg,var(--accent),#4f46e5 55%,var(--accent-2));box-shadow:0 8px 24px rgba(124,108,255,.4)}
+.logo svg{width:22px;height:22px}
+h1{margin:0;font:600 20px/1.1 var(--font-display);letter-spacing:.2px}
+.pro{font:700 10px/1 var(--font-display);letter-spacing:1.5px;vertical-align:2px;margin-left:6px;padding:3px 6px;border-radius:6px;color:#0b0714;background:linear-gradient(135deg,#c4b5fd,#67e8f9)}
+.brand p{margin:3px 0 0;font-size:12px;color:var(--muted)}
+
+/* ---------- buttons / inputs ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 15px;border-radius:10px;border:1px solid transparent;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;transition:transform .15s ease,box-shadow .2s ease,background .2s ease,border-color .2s ease,color .2s ease}
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn-primary{color:#fff;background:linear-gradient(135deg,#8b7bff 0%,#6557f2 50%,#4f46e5 100%);background-size:150% 150%;box-shadow:0 6px 22px rgba(110,95,255,.38),inset 0 1px 0 rgba(255,255,255,.22)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(110,95,255,.5);background-position:80% 50%}
+.btn-ghost{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.11);color:var(--text)}
+.btn-ghost:hover:not(:disabled){background:rgba(255,255,255,.09);border-color:var(--border-strong)}
+.btn-danger{background:rgba(255,92,122,.09);border-color:rgba(255,92,122,.32);color:#ff9db1}
+.btn-danger:hover{background:rgba(255,92,122,.16);border-color:rgba(255,92,122,.55)}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn.disabled{opacity:.45;pointer-events:none}
+.wide{width:100%;margin:6px 0}
+
+.input,.select{background:rgba(8,12,24,.72);border:1px solid rgba(255,255,255,.11);border-radius:9px;padding:8px 11px;color:var(--text);transition:border-color .2s,box-shadow .2s}
+.input::placeholder{color:#5b648a}
+.input:hover,.select:hover{border-color:var(--border-strong)}
+.input:focus,.select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,108,255,.2)}
+.select{appearance:none;-webkit-appearance:none;padding-right:30px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b94b8' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;cursor:pointer}
+
+/* ---------- toolbar & savebar ---------- */
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 4px}
+.upload{position:relative;overflow:hidden}
+.upload input{display:none}
+.field{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.spacer{flex:1}
+.savebar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;margin:4px 0 16px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.savebar b{font-size:12px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+.savebar .input{width:200px}
+.filename{margin-left:auto;font:500 11.5px/1 ui-monospace,'SF Mono',Menlo,Consolas,monospace;color:#9aa6d8;background:rgba(124,108,255,.1);border:1px solid rgba(124,108,255,.25);padding:6px 12px;border-radius:8px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.check{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);cursor:pointer;user-select:none}
+.check input{position:absolute;opacity:0;pointer-events:none}
+.check .box{width:17px;height:17px;border-radius:5px;border:1.5px solid rgba(255,255,255,.25);background:rgba(8,12,24,.72);display:inline-grid;place-items:center;transition:all .18s}
+.check .box::after{content:'';width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) scale(0);transition:transform .18s;margin-top:-2px}
+.check input:checked+.box{background:linear-gradient(135deg,var(--accent),#4f46e5);border-color:transparent;box-shadow:0 3px 10px rgba(124,108,255,.4)}
+.check input:checked+.box::after{transform:rotate(-45deg) scale(1)}
+.check input:focus-visible+.box{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- layout ---------- */
+main{display:flex;gap:16px;align-items:flex-start}
+.panel{width:262px;flex:0 0 262px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.panel h3{font:600 12px/1 var(--font-display);letter-spacing:1.2px;text-transform:uppercase;color:#c3cbee;margin:2px 0 12px;display:flex;align-items:center;gap:8px}
+.soon{font-size:9px;letter-spacing:1px;padding:3px 7px;border-radius:99px;color:#0b0714;background:linear-gradient(135deg,#c4b5fd,#67e8f9)}
+.muted{font-size:12px;color:var(--muted);line-height:1.55;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.grid label{font-size:10px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:#77809f}
+.grid .input{width:100%;margin-top:4px;padding:7px 9px}
+hr{border:0;border-top:1px solid var(--border);margin:18px 0}
+
+/* ---------- page navigation ---------- */
+.pagenav{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.11);border-radius:10px;padding:4px}
+.pagenav .btn{width:31px;height:31px;padding:0;border-radius:8px}
+.pagenav .btn:disabled{opacity:.28;pointer-events:none}
+#pageno{font:600 12px/1 var(--font-body);color:#aab4de;min-width:78px;text-align:center;font-variant-numeric:tabular-nums;user-select:none}
+
+/* ---------- workspace / a4 page ---------- */
+.workspace{flex:1;min-width:0}
+.workspace-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.workspace-bar p{margin:0;font-size:12px;color:var(--muted)}
+.chips{display:flex;gap:8px}
+.chip{font-size:11px;font-weight:600;color:#aab4de;background:rgba(255,255,255,.05);border:1px solid var(--border);padding:5px 11px;border-radius:99px;white-space:nowrap}
+.page-wrap{overflow:auto;padding:26px 10px 30px;text-align:center}
+.a4{position:relative;margin:0 auto;background:#fff;background-image:radial-gradient(circle,rgba(15,23,42,.07) 1px,transparent 1.2px);background-size:9mm 9mm;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.14),0 34px 90px rgba(0,0,0,.6),0 8px 24px rgba(0,0,0,.45)}
+.portrait{width:210mm;height:297mm}
+.landscape{width:297mm;height:210mm}
+
+/* ---------- photos ---------- */
+.photo{position:absolute;overflow:hidden;background:#eef1f7;border:1.5px solid transparent;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 2px 10px rgba(15,23,42,.18);transition:box-shadow .2s ease}
+.photo:active{cursor:grabbing}
+.photo.selected{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,108,255,.3),0 12px 34px rgba(15,23,42,.45);z-index:5}
+.tag{position:absolute;z-index:2;top:4px;left:4px;background:rgba(8,10,20,.78);color:#fff;padding:2px 7px;border-radius:5px;font-size:9.5px;font-weight:600;backdrop-filter:blur(3px)}
+.photo img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.resize{position:absolute;right:-2px;bottom:-2px;width:15px;height:15px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border:2px solid #fff;border-radius:4px;cursor:nwse-resize;z-index:6;box-shadow:0 2px 8px rgba(15,23,42,.4)}
+
+/* ---------- crop modal ---------- */
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(3,5,12,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,visibility .25s ease}
+.modal.open{opacity:1;visibility:visible;pointer-events:auto}
+.modalbox{width:min(780px,96vw);max-height:92vh;overflow:auto;background:rgba(13,18,34,.94);border:1px solid var(--border-strong);border-radius:18px;padding:22px;box-shadow:0 40px 120px rgba(0,0,0,.65);transform:translateY(16px) scale(.96);transition:transform .3s cubic-bezier(.2,.9,.3,1.15)}
+.modal.open .modalbox{transform:none}
+.modalbox h2{margin:0 0 6px;font:600 18px/1.2 var(--font-display);display:flex;align-items:center;gap:10px}
+.modalbox h2 svg{color:var(--accent-2)}
+.modalbox canvas{width:100%;height:auto;display:block;margin:14px 0 10px;background:#06080f;border-radius:10px;border:1px solid rgba(255,255,255,.1);cursor:grab;touch-action:none}
+.modalbox canvas:active{cursor:grabbing}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-6px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 2px 10px rgba(0,0,0,.5)}
+input[type=range]::-moz-range-track{height:6px;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 2px 10px rgba(0,0,0,.5)}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;bottom:26px;left:50%;transform:translate(-50%,14px);z-index:100;padding:11px 20px;border-radius:99px;font-size:13px;font-weight:500;color:var(--text);background:rgba(13,18,34,.92);border:1px solid var(--border-strong);box-shadow:0 14px 44px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;max-width:88vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- responsive ---------- */
+@media(max-width:920px){
+  main{flex-direction:column}
+  .panel{width:100%;flex:auto}
+  .savebar .input{width:150px}
+  .filename{margin-left:0;width:100%}
+  .workspace-bar p{display:none}
+}
+
+</style>
+</head>
+<body>
+
+<div class="bg" aria-hidden="true">
+  <span class="blob b1"></span>
+  <span class="blob b2"></span>
+  <span class="blob b3"></span>
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+</div>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="14.31" y1="8" x2="20.05" y2="17.94"/><line x1="9.69" y1="8" x2="21.17" y2="8"/><line x1="7.38" y1="12" x2="13.12" y2="2.06"/><line x1="9.69" y1="16" x2="3.95" y2="6.06"/><line x1="14.31" y1="16" x2="2.83" y2="16"/><line x1="16.62" y1="12" x2="10.88" y2="21.94"/></svg>
+      </div>
+      <div>
+        <h1>A4 Photo Studio <span class="pro">PRO</span></h1>
+        <p>Move &middot; Resize &middot; Crop &middot; Arrange &middot; Export PDF</p>
+      </div>
+    </div>
+    <button id="savePdf" class="btn btn-primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Save PDF
+    </button>
+  </header>
+
+  <nav class="toolbar">
+    <label class="btn btn-primary upload">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Add Pictures
+      <input id="files" type="file" accept="image/*" multiple>
+    </label>
+    <label class="field">Page
+      <select id="orientation" class="select">
+        <option value="portrait">A4 Portrait</option>
+        <option value="landscape">A4 Landscape</option>
+      </select>
+    </label>
+    <label class="field">Snap
+      <select id="snap" class="select">
+        <option value="0">Off</option>
+        <option value="1">1 mm</option>
+        <option value="5" selected>5 mm</option>
+      </select>
+    </label>
+    <div class="pagenav">
+      <button id="prevPage" class="btn btn-ghost" title="Previous page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span id="pageno">Page 1 / 1</span>
+      <button id="nextPage" class="btn btn-ghost" title="Next page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button id="addPage" class="btn btn-ghost" title="Add blank page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <button id="delPage" class="btn btn-danger" title="Delete this page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    </div>
+    <span class="spacer"></span>
+    <button id="auto" class="btn btn-ghost">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>
+      Auto Arrange
+    </button>
+    <button id="clear" class="btn btn-danger">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      Clear All
+    </button>
+  </nav>
+
+  <section class="savebar">
+    <b>File name</b>
+    <input id="doc" class="input" value="A4-Photo-Studio" placeholder="Document name" spellcheck="false">
+    <input id="nick" class="input" placeholder="Nickname (optional)" spellcheck="false">
+    <label class="check"><input id="stamp" type="checkbox" checked><span class="box"></span>Date &amp; time</label>
+    <span id="filename" class="filename"></span>
+  </section>
+
+  <main>
+    <aside class="panel">
+      <h3>Selected Photo</h3>
+      <p id="none" class="muted">No photo selected. Click a photo on the page to edit it.</p>
+      <div id="controls" hidden>
+        <div class="grid">
+          <label>X (mm)<input id="x" class="input" type="number" step=".1"></label>
+          <label>Y (mm)<input id="y" class="input" type="number" step=".1"></label>
+          <label>Width (mm)<input id="w" class="input" type="number" step=".1" min="1"></label>
+          <label>Height (mm)<input id="h" class="input" type="number" step=".1" min="1"></label>
+        </div>
+        <button id="crop" class="btn btn-ghost wide">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"/><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"/></svg>
+          Crop / Zoom
+        </button>
+        <button id="remove" class="btn btn-danger wide">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Remove Photo
+        </button>
+      </div>
+      <hr>
+      <h3>AI Toolkit <span class="soon">Soon</span></h3>
+      <p class="muted">These smart tools are reserved for a future API connection.</p>
+      <button class="btn btn-ghost wide" disabled>Auto Crop AI</button>
+      <button class="btn btn-ghost wide" disabled>ID Photo AI</button>
+      <button class="btn btn-ghost wide" disabled>Background AI</button>
+    </aside>
+
+    <section class="workspace">
+      <div class="workspace-bar">
+        <p id="hint">Each picture gets its own full A4 page — add more pictures to add more pages. Drag to move, drag the corner to resize, double-click to crop.</p>
+        <div class="chips">
+          <span class="chip" id="count">0 photos</span>
+          <span class="chip" id="pagesize">210 &times; 297 mm</span>
+        </div>
+      </div>
+      <div class="page-wrap">
+        <div id="page" class="a4 portrait"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-label="Crop and zoom">
+  <div class="modalbox">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"/><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"/></svg>
+      Crop / Zoom
+    </h2>
+    <p class="muted">Drag the image to position it, use the slider or mouse wheel to zoom, then apply.</p>
+    <canvas id="cropCanvas"></canvas>
+    <input id="zoom" type="range" min=".5" max="4" step=".01" value="1" aria-label="Zoom">
+    <div class="modal-actions">
+      <button id="cancel" class="btn btn-ghost">Cancel</button>
+      <button id="apply" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Apply Crop
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script>
+'use strict';
+/* A4 Photo Studio Pro — core logic */
+const $ = id => document.getElementById(id);
+const MM = 3.7795275591;                 /* CSS px per millimetre (96 dpi) */
+const CW = 760, CH = 540;                /* logical crop-canvas size */
+const state = { pages: [{ photos: [] }], page: 0, sel: -1, drag: null, crop: null, pan: null };
+const cur = () => state.pages[state.page];
+
+/* ---------- helpers ---------- */
+const size = () => $('orientation').value === 'portrait' ? { w: 210, h: 297 } : { w: 297, h: 210 };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const snapVal = v => { const n = +$('snap').value; return n ? Math.round(v / n) * n : v; };
+
+const cleanName = v => String(v || '').trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-');
+function fileName() {
+  const d = cleanName($('doc').value) || 'A4-Photo-Studio';
+  const n = cleanName($('nick').value);
+  const t = $('stamp').checked ? '_' + new Date().toISOString().slice(0, 16).replace('T', '_').replace(':', '') : '';
+  return d + (n ? '_' + n : '') + t + '.pdf';
+}
+function updateName() { $('filename').textContent = fileName(); }
+
+let toastTimer = null;
+function toast(msg) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+/* ---------- rendering ---------- */
+function render() {
+  const page = $('page');
+  const z = size();
+  page.className = 'a4 ' + $('orientation').value;
+  page.innerHTML = '';
+  $('hint').style.display = cur().photos.length ? 'none' : '';
+  const total = state.pages.reduce((a, pg) => a + pg.photos.length, 0);
+  $('count').textContent = total + (total === 1 ? ' photo' : ' photos') + ' \u00b7 ' + state.pages.length + (state.pages.length === 1 ? ' page' : ' pages');
+  $('pagesize').innerHTML = z.w + ' &times; ' + z.h + ' mm';
+  $('pageno').textContent = 'Page ' + (state.page + 1) + ' / ' + state.pages.length;
+  $('prevPage').disabled = state.page === 0;
+  $('nextPage').disabled = state.page >= state.pages.length - 1;
+  $('delPage').disabled = state.pages.length === 1 && !cur().photos.length;
+
+  cur().photos.forEach((p, i) => {
+    const el = document.createElement('div');
+    el.className = 'photo' + (i === state.sel ? ' selected' : '');
+    el.dataset.index = i;
+    el.style.left = p.x + 'mm';
+    el.style.top = p.y + 'mm';
+    el.style.width = p.w + 'mm';
+    el.style.height = p.h + 'mm';
+    el.innerHTML = '<span class="tag">' + (i + 1) + '</span><img src="' + p.src + '" alt="" draggable="false"><span class="resize" title="Drag to resize"></span>';
+    el.addEventListener('pointerdown', ev => {
+      if (ev.button !== 0) return;
+      startDrag(ev, i, ev.target.classList.contains('resize'), el);
+    });
+    el.addEventListener('dblclick', () => { state.sel = i; render(); openCrop(); });
+    page.appendChild(el);
+  });
+
+  const p = cur().photos[state.sel];
+  const has = !!p;
+  $('none').hidden = has;
+  $('controls').hidden = !has;
+  $('savePdf').classList.toggle('disabled', !total);
+  if (has) {
+    $('x').value = p.x.toFixed(1);
+    $('y').value = p.y.toFixed(1);
+    $('w').value = p.w.toFixed(1);
+    $('h').value = p.h.toFixed(1);
+  }
+}
+
+function startDrag(ev, i, resizing, el) {
+  ev.preventDefault();
+  state.sel = i;
+  state.drag = { i, resizing, sx: ev.clientX, sy: ev.clientY, p: { ...cur().photos[i] } };
+  el.setPointerCapture(ev.pointerId);
+  document.querySelectorAll('.photo').forEach(n => n.classList.toggle('selected', +n.dataset.index === i));
+  $('none').hidden = true;
+  $('controls').hidden = false;
+
+  const move = e => {
+    const d = state.drag;
+    if (!d) return;
+    const p = cur().photos[d.i], z = size();
+    const dx = (e.clientX - d.sx) / MM, dy = (e.clientY - d.sy) / MM;
+    if (d.resizing) {
+      p.w = clamp(snapVal(d.p.w + dx), 5, z.w - d.p.x);
+      p.h = clamp(snapVal(d.p.h + dy), 5, z.h - d.p.y);
+    } else {
+      p.x = clamp(snapVal(d.p.x + dx), 0, z.w - p.w);
+      p.y = clamp(snapVal(d.p.y + dy), 0, z.h - p.h);
+    }
+    el.style.left = p.x + 'mm';
+    el.style.top = p.y + 'mm';
+    el.style.width = p.w + 'mm';
+    el.style.height = p.h + 'mm';
+    $('x').value = p.x.toFixed(1); $('y').value = p.y.toFixed(1);
+    $('w').value = p.w.toFixed(1); $('h').value = p.h.toFixed(1);
+  };
+  const up = () => {
+    state.drag = null;
+    el.removeEventListener('pointermove', move);
+    el.removeEventListener('pointerup', up);
+    el.removeEventListener('pointercancel', up);
+    render();
+  };
+  el.addEventListener('pointermove', move);
+  el.addEventListener('pointerup', up);
+  el.addEventListener('pointercancel', up);
+}
+
+/* ---------- photo inputs ---------- */
+['x', 'y', 'w', 'h'].forEach(k => {
+  $(k).addEventListener('change', () => {
+    if (state.sel < 0) return;
+    const p = cur().photos[state.sel], z = size();
+    p[k] = Number($(k).value) || 0;
+    p.w = clamp(p.w, 5, z.w);
+    p.h = clamp(p.h, 5, z.h);
+    p.x = clamp(p.x, 0, z.w - p.w);
+    p.y = clamp(p.y, 0, z.h - p.h);
+    render();
+  });
+});
+
+/* ---------- toolbar ---------- */
+$('files').addEventListener('change', e => {
+  const list = [...e.target.files];
+  let added = 0;
+  list.forEach((f, idx) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const im = new Image();
+      im.onload = () => {
+        const z = size();
+        const p = { src: r.result, x: 0, y: 0, w: z.w, h: z.h, sw: im.naturalWidth, sh: im.naturalHeight };
+        if (idx === 0 && cur().photos.length === 0) {
+          cur().photos.push(p);
+          state.sel = 0;
+        } else {
+          state.pages.push({ photos: [p] });
+          state.page = state.pages.length - 1;
+          state.sel = 0;
+        }
+        added++;
+        render();
+        if (added === list.length) toast(list.length + (list.length === 1 ? ' page added' : ' pages added') + ' \u2014 one picture per A4 page');
+      };
+      im.src = r.result;
+    };
+    r.readAsDataURL(f);
+  });
+  e.target.value = '';
+});
+
+$('orientation').addEventListener('change', () => {
+  const z = size();
+  const old = $('orientation').value === 'portrait' ? { w: 297, h: 210 } : { w: 210, h: 297 };
+  state.pages.forEach(pg => pg.photos.forEach(p => {
+    if (p.x === 0 && p.y === 0 && p.w === old.w && p.h === old.h) { p.w = z.w; p.h = z.h; return; }
+    p.x = clamp(p.x, 0, z.w - p.w);
+    p.y = clamp(p.y, 0, z.h - p.h);
+  }));
+  render();
+});
+
+$('auto').addEventListener('click', () => {
+  const z = size(), n = cur().photos.length;
+  if (!n) return toast('This page is empty');
+  const cols = n === 1 ? 1 : 2, rows = Math.ceil(n / cols), g = 5;
+  const w = (z.w - (cols + 1) * g) / cols;
+  const h = Math.min(65, (z.h - (rows + 1) * g) / rows);
+  cur().photos.forEach((p, i) => {
+    p.x = g + (i % cols) * (w + g);
+    p.y = g + Math.floor(i / cols) * (h + g);
+    p.w = w;
+    p.h = h;
+  });
+  render();
+  toast('Auto-arranged ' + n + (n === 1 ? ' photo' : ' photos') + ' on this page');
+});
+
+$('clear').addEventListener('click', () => {
+  if (!cur().photos.length) return;
+  cur().photos = [];
+  state.sel = -1;
+  render();
+  toast('Page cleared');
+});
+
+/* ---------- page management ---------- */
+$('addPage').addEventListener('click', () => {
+  state.pages.push({ photos: [] });
+  state.page = state.pages.length - 1;
+  state.sel = -1;
+  render();
+  toast('Blank page added');
+});
+$('delPage').addEventListener('click', () => {
+  if (state.pages.length === 1) { cur().photos = []; state.sel = -1; render(); toast('Page cleared'); return; }
+  state.pages.splice(state.page, 1);
+  state.page = Math.min(state.page, state.pages.length - 1);
+  state.sel = -1;
+  render();
+  toast('Page deleted');
+});
+const gotoPage = i => {
+  if (i < 0 || i >= state.pages.length || i === state.page) return;
+  state.page = i;
+  state.sel = -1;
+  render();
+};
+$('prevPage').addEventListener('click', () => gotoPage(state.page - 1));
+$('nextPage').addEventListener('click', () => gotoPage(state.page + 1));
+
+function removeSelected() {
+  if (state.sel < 0) return;
+  cur().photos.splice(state.sel, 1);
+  state.sel = Math.min(state.sel, cur().photos.length - 1);
+  render();
+  toast('Photo removed');
+}
+$('remove').addEventListener('click', removeSelected);
+
+/* ---------- crop / zoom modal ---------- */
+function openCrop() {
+  if (state.sel < 0) return;
+  state.crop = { i: state.sel, z: 1, ox: 0, oy: 0 };
+  $('zoom').value = 1;
+  $('modal').classList.add('open');   /* fixed: class toggle, no hidden/display conflict */
+  drawCrop();
+}
+function closeCrop() {
+  state.crop = null;
+  state.pan = null;
+  $('modal').classList.remove('open');
+}
+
+$('crop').addEventListener('click', openCrop);
+$('cancel').addEventListener('click', closeCrop);
+$('modal').addEventListener('pointerdown', e => { if (e.target === $('modal')) closeCrop(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('modal').classList.contains('open')) closeCrop();
+  if ($('modal').classList.contains('open')) return;
+  const t = document.activeElement && document.activeElement.tagName;
+  const typing = t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA';
+  if ((e.key === 'Delete' || e.key === 'Backspace') && !typing) removeSelected();
+  if (e.key === 'ArrowLeft' && !typing) gotoPage(state.page - 1);
+  if (e.key === 'ArrowRight' && !typing) gotoPage(state.page + 1);
+});
+
+function drawCrop() {
+  if (!state.crop) return;
+  const c = $('cropCanvas');
+  const dpr = window.devicePixelRatio || 1;
+  c.width = CW * dpr;
+  c.height = CH * dpr;
+  const ctx = c.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const cr = state.crop, p = cur().photos[cr.i];
+  const im = new Image();
+  im.onload = () => {
+    const sc = Math.max(CW / im.naturalWidth, CH / im.naturalHeight) * cr.z;
+    const w = im.naturalWidth * sc, h = im.naturalHeight * sc;
+    const x = (CW - w) / 2 + cr.ox, y = (CH - h) / 2 + cr.oy;
+    ctx.clearRect(0, 0, CW, CH);
+    ctx.fillStyle = '#06080f';
+    ctx.fillRect(0, 0, CW, CH);
+    ctx.drawImage(im, x, y, w, h);
+    ctx.strokeStyle = 'rgba(255,255,255,.85)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, CW - 2, CH - 2);
+  };
+  im.src = p.src;
+}
+
+const cnv = $('cropCanvas');
+cnv.addEventListener('pointerdown', e => {
+  if (!state.crop) return;
+  e.preventDefault();
+  cnv.setPointerCapture(e.pointerId);
+  state.pan = { x: e.clientX, y: e.clientY, ox: state.crop.ox, oy: state.crop.oy };
+});
+cnv.addEventListener('pointermove', e => {
+  if (!state.pan || !state.crop) return;
+  state.crop.ox = state.pan.ox + e.clientX - state.pan.x;
+  state.crop.oy = state.pan.oy + e.clientY - state.pan.y;
+  drawCrop();
+});
+const endPan = () => { state.pan = null; };
+cnv.addEventListener('pointerup', endPan);
+cnv.addEventListener('pointercancel', endPan);
+
+function setZoom(z2) {
+  if (!state.crop) return;
+  z2 = clamp(z2, 0.5, 4);
+  const cx = CW / 2, cy = CH / 2;
+  state.crop.ox = cx - (cx - state.crop.ox) * (z2 / state.crop.z);
+  state.crop.oy = cy - (cy - state.crop.oy) * (z2 / state.crop.z);
+  state.crop.z = z2;
+  $('zoom').value = z2;
+  drawCrop();
+}
+$('zoom').addEventListener('input', () => { if (state.crop) { state.crop.z = +$('zoom').value; drawCrop(); } });
+cnv.addEventListener('wheel', e => {
+  if (!state.crop) return;
+  e.preventDefault();
+  setZoom(state.crop.z * (e.deltaY < 0 ? 1.1 : 1 / 1.1));
+}, { passive: false });
+
+$('apply').addEventListener('click', () => {
+  if (!state.crop) return;
+  const cr = state.crop, p = cur().photos[cr.i];
+  const im = new Image();
+  im.onload = () => {
+    const sc = Math.max(CW / im.naturalWidth, CH / im.naturalHeight) * cr.z;
+    const w = im.naturalWidth * sc, h = im.naturalHeight * sc;
+    const x = (CW - w) / 2 + cr.ox, y = (CH - h) / 2 + cr.oy;
+    const sx = clamp(-x / sc, 0, im.naturalWidth);
+    const sy = clamp(-y / sc, 0, im.naturalHeight);
+    const sw = clamp((CW - x) / sc, 1, im.naturalWidth - sx);
+    const sh = clamp((CH - y) / sc, 1, im.naturalHeight - sy);
+    const out = document.createElement('canvas');
+    out.width = 1400;
+    out.height = Math.round(1400 * CH / CW);
+    out.getContext('2d').drawImage(im, sx, sy, sw, sh, 0, 0, out.width, out.height);
+    p.src = out.toDataURL('image/jpeg', 0.92);
+    p.sw = out.width;
+    p.sh = out.height;
+    closeCrop();
+    render();
+    toast('Crop applied');
+  };
+  im.src = p.src;
+});
+
+/* ---------- save pdf ---------- */
+$('savePdf').addEventListener('click', async () => {
+  const total = state.pages.reduce((a, pg) => a + pg.photos.length, 0);
+  if (!total) return toast('Add pictures first');
+  if (!window.jspdf) return toast('PDF library did not load — check your internet connection');
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: $('orientation').value, unit: 'mm', format: 'a4', compress: true });
+  state.pages.forEach((pg, i) => {
+    if (i) pdf.addPage('a4', $('orientation').value);
+    pg.photos.forEach(p => pdf.addImage(p.src, 'JPEG', p.x, p.y, p.w, p.h, undefined, 'FAST'));
+  });
+  const name = fileName();
+  pdf.save(name);
+  toast('Saved ' + name + ' — ' + state.pages.length + (state.pages.length === 1 ? ' page' : ' pages'));
+});
+
+/* ---------- filename live preview ---------- */
+['doc', 'nick'].forEach(id => $(id).addEventListener('input', updateName));
+$('stamp').addEventListener('change', updateName);
+
+/* ---------- init ---------- */
+updateName();
+render();
+
+</script>
+</body>
+</html>
